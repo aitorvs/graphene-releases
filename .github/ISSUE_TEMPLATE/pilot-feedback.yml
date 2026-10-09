@@ -1,0 +1,47 @@
+name: Human pilot feedback
+description: Record an authorized pilot on an exact published release.
+title: 'Pilot feedback: <release> on <OS>'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Preparing this form does not start a pilot. Use it after the release readiness record authorizes the human pilot. Do not include credentials or private repository data.
+  - type: input
+    id: release
+    attributes:
+      label: Exact release and environment
+      description: Published tag, gt --version (commit), OS/architecture, installation method, and readiness-record link.
+    validations:
+      required: true
+  - type: textarea
+    id: workflows
+    attributes:
+      label: Workflows attempted and outcomes
+      description: Record first stack, review feedback/modify, raw Git/restack, fork navigation, sync after bottom squash, move, full merge, and recovery. Mark each passed, failed, or unexecuted.
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: Confusion, errors, and interventions
+      description: Commands, expected versus observed results, completed/remaining work, and every maintainer intervention. Attach sanitized output and public support issue links.
+    validations:
+      required: true
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: Human pilot verdict
+      options:
+        - Not evaluated
+        - Stop and investigate
+        - Extend pilot
+        - Comfortable continuing
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Stop or extend decision and owner
+      description: Stop for lost work, unexplained ref/PR changes, unsafe recovery, or missing required evidence. Extend only with owned blockers, safe workarounds, and an explicit next review. Human verdict is separate from any AI-agent gate.
+    validations:
+      required: true
