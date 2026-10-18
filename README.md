@@ -3,12 +3,11 @@
 Stacked pull requests for Git and GitHub. The executable is **`gt`**. An optional
 shell shortcut is `alias g=gt`; packaging does not install `g` or `graphene`.
 
-This guide describes the next pilot version built from the P0/P1 improvements.
-The currently published **v0.2.0** has the core workflow, but does not include
-those recovery safeguards or explicit `co/down/top` arguments. Installation
-below matches v0.2.0 exactly; pilot readiness for a newer release must be
-verified separately before inviting users. Check `gt --version` and
-`gt <command> --help` against the version you installed.
+This guide targets **v0.3.0**, including recovery safeguards, explicit navigation
+and portable agent integration. Installation below selects that exact release.
+Human pilot and independent coding-agent lifecycle readiness are verified
+separately; publication alone does not establish those verdicts. Check
+`gt --version` and `gt <command> --help` against the version you installed.
 
 ## Install and upgrade
 
@@ -41,7 +40,7 @@ in a shell; repeat it with a newly published tag to upgrade:
 
 ```sh
 set -eu
-version=v0.2.0
+version=v0.3.0
 case "$(uname -m)" in
   x86_64) arch=amd64 ;;
   aarch64|arm64) arch=arm64 ;;
@@ -67,11 +66,25 @@ Add `$HOME/.local/bin` to PATH in your shell startup file to keep that setting.
 Release assets and checksums are public at
 [Graphene releases](https://github.com/aitorvs/graphene-releases/releases).
 
+## Coding agents
+
+Install the shared workflow skill in your repository for the agent you use:
+
+```sh
+gt agents install --agent codex
+# Or: gt agents install --agent claude
+gt agents status
+```
+
+Start a fresh agent session after installation. The same CLI and skill support
+both agents; independent agent lifecycle validation is a separate readiness task.
+Use `gt capabilities --json` and `gt inspect --json` for machine-readable state.
+
 ## First stack
 
 Start in your Git repository on its trunk with a clean worktree and a normal
 `origin` remote. Fetch/push must resolve to one identical URL; separate push
-URLs are rejected by the next pilot version.
+URLs are rejected by v0.3.0.
 
 ```sh
 gh auth status
@@ -94,6 +107,12 @@ fallback, so switch to the correct trunk first. Trunk need not be `main`.
 Git branches bottom-up with `gt track feature-a --parent main`, then
 `gt track feature-b --parent feature-a`.
 
+Before `sync` or `restack` rebases an adopted branch, Graphene retains its
+verified remote head when it matches the local head. A later `submit` updates
+the existing PR with an exact-head lease; a concurrent remote update rejects
+the push. Branches that already diverged require scoped publication approval.
+Offline restacking grants no new publication authority.
+
 Graphene stores branch-parent relationships and replay boundaries locally in
 `.git/graphene/state.json`. `log` works offline and shows cached PR numbers;
 it does not fetch current GitHub status. Preserve this metadata if it fails
@@ -103,15 +122,14 @@ from Git history.
 ## Review feedback and navigation
 
 ```sh
-gt co feature-a            # explicit checkout in the next pilot version
+gt co feature-a            # explicit checkout in v0.3.0
 # Edit files for review feedback.
 gt modify -a               # amend; automatically restack descendants locally
 gt modify -a -c -m "More"  # alternatively add a new commit and restack
 gt submit                  # publish changed heads and PR descriptions/bases
 ```
 
-For v0.2.0, use `git switch feature-a` for an explicit checkout. In the next
-pilot version, `gt co` chooses among tracked branches in a terminal;
+In v0.3.0, `gt co` chooses among tracked branches in a terminal;
 `gt co <branch>` also accepts trunk. `gt up` moves to the parent,
 `gt down [child]` to a direct child, `gt top [leaf]` to a leaf above the current
 branch, `gt bottom` to the stack root, and `gt trunk` to trunk. Fork choices
@@ -120,7 +138,7 @@ In scripts, supply explicit choices; a sole candidate is selected directly.
 
 After changes made outside Graphene, such as a raw Git amend/rebase, run
 `gt restack` to reconcile the current stack, then `gt submit` to publish.
-Local operations do not push. In the next pilot version, default summaries
+Local operations do not push. In v0.3.0, default summaries
 remain visible with `NO_COLOR` or redirected output; `--quiet` suppresses
 mutation success/progress, while errors, `log`, and dry-run results remain.
 
@@ -166,21 +184,34 @@ trunk commit; bottom-up is the normal daily workflow.
 
 ## Recover safely
 
+Human output explains what happened and the next safe action in plain English.
+Recovery choices describe their consequences and leave work pending by default.
+Use `--json` for stable diagnostic codes, full recorded evidence and automation.
+`gt inspect` shows a local summary; it does not check current GitHub status.
+
 For a conflict, resolve files and stage them, then use `gt continue`.
 Use `gt abort` to restore the interrupted local operation's checkpoint.
 Prefer these over raw Git rebase recovery while a Graphene journal exists.
 
 - Aborting a descendant restack after `modify` keeps the committed parent edit
-  and restores descendants. Run `gt restack`, then `gt submit`. The next pilot
-  version also retains local input checkpoints under `refs/graphene/recovery/`.
+  and restores descendants. Run `gt restack`, then `gt submit`. v0.3.0 also retains local input checkpoints under `refs/graphene/recovery/`.
 - Move recovery restores branch topology and PR bases; a failed GitHub rollback
   retains its journal. Correct the underlying error before continuing/aborting.
 - Completed pushes and GitHub merges remain completed after local abort.
   Inspect `gt log` and GitHub, finish local recovery, then sync/publish survivors.
-- A partial or uncertain submit retains a checkpoint in the next pilot version.
-  Rerun `gt submit` with the same inputs to reconcile accepted remote effects.
-  Use `--retry-create` only after independently establishing that no PR was
-  created, including closed PRs; an empty open-PR lookup is insufficient.
+- For partial or uncertain remote work, run `gt recover` (or `--json` for
+  agents). Review original targets, confirmed/unknown effects and current facts.
+  Available actions use `gt recover resume|replace|retire --approve <id>`;
+  `gt submit --approve <id>` accepts applicable decisions inline. Terminal
+  choices leave work pending by default. Merge/sync support unchanged resume.
+- Direct Git amend/squash/rebase after successful submission remains ordinary
+  work: restack descendants where needed, then submit. Exceptional adoption of
+  rewritten externally published history requires scoped publication approval.
+- Git publication uses atomic exact-head leases. PR edits use fresh best-effort
+  checks; GitHub cannot guarantee protection against an edit between the check
+  and PATCH. Graphene preserves unknown request evidence separately from a
+  verified current result. An exact verified merge finishes cleanup without
+  repeating that merge.
 - An unexpected remote-head/lease change stops publication. Inspect concurrent
   work; do not force-push to bypass it. Restore the intended single origin URL
   if repository identity changed.
