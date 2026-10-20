@@ -226,17 +226,6 @@ Prefer these over raw Git rebase recovery while a Graphene journal exists.
 ## Help and feedback
 
 Run `gt --help` or `gt <command> --help`. Report problems through
-[public support issues](https://github.com/aitorvs/graphene-releases/issues),
-which do not require access to the private source repository. Include version,
+[public support issues](https://github.com/aitorvs/graphene-releases/issues). Include version,
 OS/architecture, the command, observed error, and completed/remaining work.
 Remove tokens and private repository details before sharing output.
-
-## Maintainers
-
-In the source checkout, `./release.sh vMAJOR.MINOR.PATCH --check` validates
-without publication. Running it without `--check` publishes a release and
-updates Homebrew. Release validation uses readonly dependency checks, race
-tests, vet, a CGO-disabled build, and disposable workflow checks. A failed
-publication retains its tag; inspect the public release before retrying.
-The source README is the canonical public guide; mirror it to the public
-release repository through a reviewed PR when instructions change.
