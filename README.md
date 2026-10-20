@@ -68,16 +68,40 @@ Release assets and checksums are public at
 
 ## Coding agents
 
-Install the shared workflow skill in your repository for the agent you use:
+Install the shared workflow skill for your user account to use it across
+repositories:
+
+```sh
+gt agents install --global --agent codex
+gt agents status --global --agent codex
+```
+
+For Claude Code, replace `--agent codex` with `--agent claude`. Omit `--agent`
+to install or check both agents. Global installation can run outside a repository.
+
+For a project-specific installation, run these inside that repository instead:
 
 ```sh
 gt agents install --agent codex
-# Or: gt agents install --agent claude
-gt agents status
+gt agents status --agent codex
 ```
 
-Start a fresh agent session after installation. The same CLI and skill support
-both agents; independent agent lifecycle validation is a separate readiness task.
+Keep the same scope when managing the skill:
+
+| Task | Example for a global Codex installation |
+| --- | --- |
+| Preview installation changes | `gt agents install --global --agent codex --dry-run` |
+| Refresh after upgrading Graphene | `gt agents install --global --agent codex` |
+| Check installed files and compatibility | `gt agents status --global --agent codex` |
+| Remove the installed skill | `gt agents uninstall --global --agent codex` |
+
+Omit `--global` for the repository installation. If status reports a potential
+skill collision, review both scopes before choosing which copy to keep.
+
+Start a fresh agent session after installing or refreshing the skill. Status
+reports installation and compatibility; confirm that the agent discovers
+Graphene in the fresh session. The same CLI and skill support both agents;
+independent agent lifecycle validation is a separate readiness task.
 Use `gt capabilities --json` and `gt inspect --json` for machine-readable state.
 
 ## First stack
@@ -128,6 +152,20 @@ gt modify -a               # amend; automatically restack descendants locally
 gt modify -a -c -m "More"  # alternatively add a new commit and restack
 gt submit                  # publish changed heads and PR descriptions/bases
 ```
+
+Choose the submit form that fits the work:
+
+```sh
+gt submit --draft                  # create new PRs as drafts
+gt submit --edit                   # edit PR descriptions in your editor
+gt submit --body-file description.md --json  # supply current branch text for automation
+gt submit --body-for feature-a=description-a.md --body-for feature-b=description-b.md
+```
+
+These are alternatives. `--draft` applies to new PRs. File inputs replace the
+selected PR's description text, so supply the complete intended description;
+use repeated `--body-for branch=path` inputs for multiple layers. `--json` is
+noninteractive, so agents should provide text through files instead of `--edit`.
 
 In v0.3.0, `gt co` chooses among tracked branches in a terminal;
 `gt co <branch>` also accepts trunk. `gt up` moves to the parent,
@@ -187,7 +225,17 @@ trunk commit; bottom-up is the normal daily workflow.
 Human output explains what happened and the next safe action in plain English.
 Recovery choices describe their consequences and leave work pending by default.
 Use `--json` for stable diagnostic codes, full recorded evidence and automation.
-`gt inspect` shows a local summary; it does not check current GitHub status.
+Choose the inspection command based on what you need to check:
+
+```sh
+gt inspect    # local checkout, stack relationships and recorded recovery state
+gt recover    # reconcile unfinished remote work and review supported choices
+```
+
+Use `inspect` before an operation or when checking local state; it does not fetch
+or check current GitHub status. Use `recover` when an earlier command reports
+unfinished or uncertain remote work; it checks recorded targets against current
+facts and offers recovery choices.
 
 For a conflict, resolve files and stage them, then use `gt continue`.
 Use `gt abort` to restore the interrupted local operation's checkpoint.
