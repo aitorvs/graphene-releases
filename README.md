@@ -3,7 +3,7 @@
 Stacked pull requests for Git and GitHub. The executable is **`gt`**. An optional
 shell shortcut is `alias g=gt`; packaging does not install `g` or `graphene`.
 
-This guide targets **v0.5.1**, including maintained stack comments, template-first PR
+This guide targets **v0.6.0**, including stack reshaping, maintained stack comments, template-first PR
 descriptions, operation progress, a read-only stack doctor and portable agent integration. Installation below selects that exact release.
 Human pilot and independent coding-agent lifecycle readiness are verified
 separately; publication alone does not establish those verdicts. Check
@@ -40,7 +40,7 @@ in a shell; repeat it with a newly published tag to upgrade:
 
 ```sh
 set -eu
-version=v0.5.1
+version=v0.6.0
 case "$(uname -m)" in
   x86_64) arch=amd64 ;;
   aarch64|arm64) arch=arm64 ;;
@@ -108,7 +108,7 @@ Use `gt capabilities --json` and `gt inspect --json` for machine-readable state.
 
 Start in your Git repository on its trunk with a clean worktree and a normal
 `origin` remote. Fetch/push must resolve to one identical URL; separate push
-URLs are rejected by v0.5.1.
+URLs are rejected by v0.6.0.
 
 ```sh
 gh auth status
@@ -146,12 +146,16 @@ from Git history.
 ## Review feedback and navigation
 
 ```sh
-gt co feature-a            # explicit checkout in v0.5.1
+gt co feature-a            # explicit checkout in v0.6.0
 # Edit files for review feedback.
 gt modify -a               # amend; automatically restack descendants locally
 gt modify -a -c -m "More"  # alternatively add a new commit and restack
 gt submit                  # publish changed heads and PR descriptions/bases
 ```
+
+From a branch higher in the stack, `gt modify --into feature-a` applies your
+staged changes to `feature-a` without checking it out; see
+[Reshape a stack](#reshape-a-stack).
 
 Choose the submit form that fits the work:
 
@@ -183,7 +187,7 @@ gt submit --comments-only  # refresh published stack navigation without pushing 
 
 This mode does not create PRs or change their bases or manual descriptions.
 
-In v0.5.1, `gt co` chooses among tracked branches in a terminal;
+In v0.6.0, `gt co` chooses among tracked branches in a terminal;
 `gt co <branch>` also accepts trunk. `gt up` moves to the parent,
 `gt down [child]` to a direct child, `gt top [leaf]` to a leaf above the current
 branch, `gt bottom` to the stack root, and `gt trunk` to trunk. Fork choices
@@ -192,12 +196,65 @@ In scripts, supply explicit choices; a sole candidate is selected directly.
 
 After changes made outside Graphene, such as a raw Git amend/rebase, run
 `gt restack` to reconcile the current stack, then `gt submit` to publish.
-Local operations do not push. In v0.5.1, default summaries
+Local operations do not push. In v0.6.0, default summaries
 remain visible with `NO_COLOR` or redirected output; `--quiet` suppresses
 mutation success/progress, while errors, `log`, and dry-run results remain.
 Long operations report their current phase and completed work; interactive
 terminals use colors and icons, while redirected output stays readable and
 `--json` retains its machine-readable contract.
+
+## Reshape a stack
+
+New in v0.6.0. These commands change a stack's structure or commits locally and
+restack whatever above the change needs it. None of them pushes; run `gt submit`
+afterwards to publish.
+
+```sh
+gt modify --into feature-a -m "Address review"  # apply staged changes to a lower branch
+gt squash                                        # collapse this branch's commits into one
+gt split --by-file 'docs/*' --name docs -m "Document it"  # move files into a new branch below
+gt split --by-commit                             # give each commit its own branch
+gt create helper -a -m "Add helper" --insert     # add a branch between this one and its children
+gt fold                                          # fold this branch into its parent
+gt delete feature-b                              # delete a branch; its children move to its parent
+```
+
+Every reshape takes `--dry-run`, which lists each affected branch, its commits
+and what happens to its PR, without changing anything. A conflict while
+restacking stops for `gt continue`, or `gt abort`, which undoes the whole
+reshape, including uncommitted and staged changes.
+
+- `modify --into <branch>` applies the staged changes (or everything with `-a`)
+  to a branch below the current one, amending its last commit or adding one
+  with `-c -m`, then rebases everything above it. You stay where you are with
+  nothing left staged. It needs Git 2.38 or later; staged changes that conflict
+  with that branch are refused, and you can `gt co` it and `gt modify` there.
+- `squash` keeps the first commit's message and author unless `-m` or `--edit`
+  replaces the message.
+- `split --by-file <pathspec>` works on a single-commit branch: matching files
+  move into a new branch below it, named with `--name` and committed with `-m`.
+  Pathspecs are relative to your current directory and may repeat. The current
+  branch keeps its name, PR and children.
+- `split --by-commit` gives each commit its own branch below the current one,
+  asking for a name for each (in scripts, pass `--name` once per commit below
+  the newest, oldest first; `--dry-run` previews suggested names). No commit
+  is rewritten. The current branch keeps its newest commit, so its PR shrinks
+  to that commit; fold branches back together with `gt fold`. Plain
+  `gt split` asks which kind of split you want.
+- `create <branch> --insert` commits the staged changes like `gt create`, then
+  moves the current branch's children onto the new branch.
+- `fold` moves the parent up to this branch's tip and removes this branch; its
+  children move onto the parent. `--keep` keeps this branch and removes the
+  parent instead. A branch on trunk is merged with `gt merge`, not folded.
+- `delete [branch]` drops a branch's commits from its children and moves them
+  onto its parent. `--upstack` deletes everything above it too; commits not in
+  trunk need `--force` outside a terminal.
+
+A removed branch's PR stays open on GitHub, and Graphene names it so you can
+close it there. Retargeted, rewritten and new branches are published by the
+next `gt submit`; retarget children before deleting a removed branch's remote
+branch, or GitHub closes their PRs. Reshapes refuse branches checked out in
+another worktree.
 
 ## Sync, move, and merge
 
@@ -265,7 +322,7 @@ Use `gt abort` to restore the interrupted local operation's checkpoint.
 Prefer these over raw Git rebase recovery while a Graphene journal exists.
 
 - Aborting a descendant restack after `modify` keeps the committed parent edit
-  and restores descendants. Run `gt restack`, then `gt submit`. v0.5.1 also retains local input checkpoints under `refs/graphene/recovery/`.
+  and restores descendants. Run `gt restack`, then `gt submit`. v0.6.0 also retains local input checkpoints under `refs/graphene/recovery/`.
 - Move recovery restores branch topology and PR bases; a failed GitHub rollback
   retains its journal. Correct the underlying error before continuing/aborting.
 - Completed pushes and GitHub merges remain completed after local abort.
