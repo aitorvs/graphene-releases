@@ -3,7 +3,7 @@
 Stacked pull requests for Git and GitHub. The executable is **`gt`**. An optional
 shell shortcut is `alias g=gt`; packaging does not install `g` or `graphene`.
 
-This guide targets **v0.6.0**, including stack reshaping, maintained stack comments, template-first PR
+This guide targets **v0.7.0**, including `gt upgrade` and update notices, stack reshaping, maintained stack comments, template-first PR
 descriptions, operation progress, a read-only stack doctor and portable agent integration. Installation below selects that exact release.
 Human pilot and independent coding-agent lifecycle readiness are verified
 separately; publication alone does not establish those verdicts. Check
@@ -31,16 +31,13 @@ brew uninstall --formula graphene
 brew install --cask aitorvs/graphene/graphene
 ```
 
-Later upgrades use `brew update` followed by
-`brew upgrade --cask aitorvs/graphene/graphene`.
-
 On Linux (x86_64 or ARM64), install the exact release archive and verify its
 SHA-256 checksum before replacing your user-local executable. Run this block
-in a shell; repeat it with a newly published tag to upgrade:
+in a shell:
 
 ```sh
 set -eu
-version=v0.6.0
+version=v0.7.0
 case "$(uname -m)" in
   x86_64) arch=amd64 ;;
   aarch64|arm64) arch=arm64 ;;
@@ -65,6 +62,38 @@ gt --version
 Add `$HOME/.local/bin` to PATH in your shell startup file to keep that setting.
 Release assets and checksums are public at
 [Graphene releases](https://github.com/aitorvs/graphene-releases/releases).
+
+From v0.7.0, upgrade to the latest release with:
+
+```sh
+gt upgrade
+```
+
+`gt upgrade` follows the way `gt` was installed. A Homebrew cask runs
+`brew update` and `brew upgrade --cask aitorvs/graphene/graphene`. A downloaded
+`gt` is replaced in place once the new archive matches its SHA-256 checksum;
+nothing changes if it does not. `gt upgrade --dry-run` shows the versions and
+exact steps without changing anything. `gt upgrade` never uses `sudo`: when it
+cannot write the directory holding `gt`, it prints the manual steps instead. If
+your coding agents' skills are older than the new `gt`, it shows the
+`gt agents install` command that updates them.
+
+v0.6.0 and earlier have no `gt upgrade`, so upgrade once by hand to reach
+v0.7.0: run `brew update` and `brew upgrade --cask aitorvs/graphene/graphene`
+for the Homebrew cask, or run the Linux block again. These manual steps remain
+the fallback whenever `gt upgrade` cannot run.
+
+In a terminal, `gt` checks at most once a day for a newer release and, when
+there is one, prints a line after a command such as
+`⚠ gt 0.7.0 is available (you have 0.6.0). Run gt upgrade to update.`
+The check runs in a short background process after the command, so it never
+delays it, and the notice appears on a later command. It is an
+unauthenticated request to `api.github.com` for the latest
+`aitorvs/graphene-releases` release, identified only as `gt/<version>`, with no
+token or repository data; the answer is cached in your user cache directory.
+It never runs in CI, with `--json`, `--quiet` or `--non-interactive`, or in
+source builds. Turn it off with `GRAPHENE_NO_UPDATE_CHECK=1` or
+`git config --global graphene.updateCheck false`.
 
 ## Coding agents
 
@@ -108,7 +137,7 @@ Use `gt capabilities --json` and `gt inspect --json` for machine-readable state.
 
 Start in your Git repository on its trunk with a clean worktree and a normal
 `origin` remote. Fetch/push must resolve to one identical URL; separate push
-URLs are rejected by v0.6.0.
+URLs are rejected by v0.7.0.
 
 ```sh
 gh auth status
@@ -146,7 +175,7 @@ from Git history.
 ## Review feedback and navigation
 
 ```sh
-gt co feature-a            # explicit checkout in v0.6.0
+gt co feature-a            # explicit checkout in v0.7.0
 # Edit files for review feedback.
 gt modify -a               # amend; automatically restack descendants locally
 gt modify -a -c -m "More"  # alternatively add a new commit and restack
@@ -187,7 +216,7 @@ gt submit --comments-only  # refresh published stack navigation without pushing 
 
 This mode does not create PRs or change their bases or manual descriptions.
 
-In v0.6.0, `gt co` chooses among tracked branches in a terminal;
+In v0.7.0, `gt co` chooses among tracked branches in a terminal;
 `gt co <branch>` also accepts trunk. `gt up` moves to the parent,
 `gt down [child]` to a direct child, `gt top [leaf]` to a leaf above the current
 branch, `gt bottom` to the stack root, and `gt trunk` to trunk. Fork choices
@@ -196,7 +225,7 @@ In scripts, supply explicit choices; a sole candidate is selected directly.
 
 After changes made outside Graphene, such as a raw Git amend/rebase, run
 `gt restack` to reconcile the current stack, then `gt submit` to publish.
-Local operations do not push. In v0.6.0, default summaries
+Local operations do not push. In v0.7.0, default summaries
 remain visible with `NO_COLOR` or redirected output; `--quiet` suppresses
 mutation success/progress, while errors, `log`, and dry-run results remain.
 Long operations report their current phase and completed work; interactive
@@ -322,7 +351,7 @@ Use `gt abort` to restore the interrupted local operation's checkpoint.
 Prefer these over raw Git rebase recovery while a Graphene journal exists.
 
 - Aborting a descendant restack after `modify` keeps the committed parent edit
-  and restores descendants. Run `gt restack`, then `gt submit`. v0.6.0 also retains local input checkpoints under `refs/graphene/recovery/`.
+  and restores descendants. Run `gt restack`, then `gt submit`. v0.7.0 also retains local input checkpoints under `refs/graphene/recovery/`.
 - Move recovery restores branch topology and PR bases; a failed GitHub rollback
   retains its journal. Correct the underlying error before continuing/aborting.
 - Completed pushes and GitHub merges remain completed after local abort.
