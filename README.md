@@ -3,7 +3,7 @@
 Stacked pull requests for Git and GitHub. The executable is **`gt`**. An optional
 shell shortcut is `alias g=gt`; packaging does not install `g` or `graphene`.
 
-This guide targets **v0.7.3**, including `gt upgrade` and update notices, one stack shared by linked worktrees, stack reshaping, maintained stack comments, template-first PR
+This guide targets **v0.8.0**, including `gt upgrade` and update notices, one stack shared by linked worktrees, stack reshaping, maintained stack comments, template-first PR
 descriptions, operation progress, a read-only stack doctor and portable agent integration. Installation below selects that exact release.
 Human pilot and independent coding-agent lifecycle readiness are verified
 separately; publication alone does not establish those verdicts. Check
@@ -37,7 +37,7 @@ in a shell:
 
 ```sh
 set -eu
-version=v0.7.3
+version=v0.8.0
 case "$(uname -m)" in
   x86_64) arch=amd64 ;;
   aarch64|arm64) arch=arm64 ;;
@@ -137,7 +137,7 @@ Use `gt capabilities --json` and `gt inspect --json` for machine-readable state.
 
 Start in your Git repository on its trunk with a clean worktree and a normal
 `origin` remote. Fetch/push must resolve to one identical URL; separate push
-URLs are rejected by v0.7.3.
+URLs are rejected by v0.8.0.
 
 ```sh
 gh auth status
@@ -175,7 +175,7 @@ from Git history.
 ## Review feedback and navigation
 
 ```sh
-gt co feature-a            # explicit checkout in v0.7.3
+gt co feature-a            # explicit checkout in v0.8.0
 # Edit files for review feedback.
 gt modify -a               # amend; automatically restack descendants locally
 gt modify -a -c -m "More"  # alternatively add a new commit and restack
@@ -216,7 +216,7 @@ gt submit --comments-only  # refresh published stack navigation without pushing 
 
 This mode does not create PRs or change their bases or manual descriptions.
 
-In v0.7.3, `gt co` chooses among tracked branches in a terminal;
+In v0.8.0, `gt co` chooses among tracked branches in a terminal;
 `gt co <branch>` also accepts trunk. `gt up` moves to the parent,
 `gt down [child]` to a direct child, `gt top [leaf]` to a leaf above the current
 branch, `gt bottom` to the stack root, and `gt trunk` to trunk. Fork choices
@@ -225,7 +225,7 @@ In scripts, supply explicit choices; a sole candidate is selected directly.
 
 After changes made outside Graphene, such as a raw Git amend/rebase, run
 `gt restack` to reconcile the current stack, then `gt submit` to publish.
-Local operations do not push. In v0.7.3, default summaries
+Local operations do not push. In v0.8.0, default summaries
 remain visible with `NO_COLOR` or redirected output; `--quiet` suppresses
 mutation success/progress, while errors, `log`, and dry-run results remain.
 Long operations report their current phase and completed work; interactive
@@ -366,7 +366,7 @@ Use `gt abort` to restore the interrupted local operation's checkpoint.
 Prefer these over raw Git rebase recovery while a Graphene journal exists.
 
 - Aborting a descendant restack after `modify` keeps the committed parent edit
-  and restores descendants. Run `gt restack`, then `gt submit`. v0.7.3 also retains local input checkpoints under `refs/graphene/recovery/`.
+  and restores descendants. Run `gt restack`, then `gt submit`. v0.8.0 also retains local input checkpoints under `refs/graphene/recovery/`.
 - Move recovery restores branch topology and PR bases; a failed GitHub rollback
   retains its journal. Correct the underlying error before continuing/aborting.
 - Completed pushes and GitHub merges remain completed after local abort.
